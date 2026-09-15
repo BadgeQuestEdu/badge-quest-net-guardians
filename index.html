@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#12182c">
+  <title>Badge Quest: Net Guardians</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css?v=maze">
+</head>
+<body>
+  <div id="app">
+    <header id="topbar" class="hidden">
+      <div id="hud-name">Guardian</div>
+      <div id="hud-grade" class="hud-grade">Grade —</div>
+      <div id="hud-world">World Hub</div>
+      <div class="hud-stats">
+        <span id="hud-worlds">Worlds 0/7</span>
+        <div id="hearts" class="hearts hidden" title="Wrongs left this world"></div>
+        <div id="badge-slots" aria-label="Badges"></div>
+        <span id="hud-count">0/49</span>
+      </div>
+      <button id="btn-unstick" class="btn ghost" type="button" title="If you cannot move">Unstick</button>
+      <button id="btn-hub" class="btn ghost hidden" type="button">Hub</button>
+      <button id="btn-save-top" class="btn ghost" type="button">Save</button>
+      <button id="btn-mute" class="btn ghost" type="button" aria-label="Sound on" title="Sound on">🔊</button>
+      <button id="btn-pause" class="btn ghost" type="button">Pause</button>
+    </header>
+
+    <section id="screen-title" class="screen">
+      <div class="logo-mark" aria-hidden="true">★</div>
+      <h1 class="title">Badge Quest<span>Net Guardians</span></h1>
+      <p class="tagline">Explore colorful worlds, answer internet-safety challenges, and collect 49 shiny badges. Grades 3–5 (fun for older kids too!).</p>
+      <div class="btn-row">
+        <button id="btn-start" class="btn mega" type="button">Start Quest</button>
+        <button id="btn-continue" class="btn teal hidden" type="button">Continue</button>
+        <button id="btn-howto" class="btn ghost" type="button">How to Play</button>
+        <button id="btn-new-from-title" class="btn ghost" type="button">Switch Player</button>
+      </div>
+      <p class="credit">A classroom adventure for Teacher J. Schwartz · No accounts · Progress saves on this device</p>
+    </section>
+
+
+    <section id="screen-grade" class="screen hidden">
+      <div class="name-card grade-card">
+        <p class="kicker">Almost ready</p>
+        <h2>Choose your grade</h2>
+        <p>Questions match your grade. You can change this later in Pause. Maps and badges stay the same.</p>
+        <div class="grade-picks" role="group" aria-label="Grade">
+          <button type="button" class="grade-pick" data-grade="3">
+            <strong>Grade 3</strong>
+            <span>Basics: private info, kindness, strangers, asking for help</span>
+          </button>
+          <button type="button" class="grade-pick" data-grade="4">
+            <strong>Grade 4</strong>
+            <span>Bridge year: passwords, chatting/gaming, footprint intro</span>
+          </button>
+          <button type="button" class="grade-pick" data-grade="5">
+            <strong>Grade 5</strong>
+            <span>Deeper: footprint, 2FA/phishing, AI media, bystander choices</span>
+          </button>
+        </div>
+        <div id="grade-error" class="err"></div>
+        <div class="btn-row">
+          <button id="btn-grade-cancel" class="btn ghost hidden" type="button">Cancel</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-name" class="screen hidden">
+      <div class="name-card">
+        <div class="tabs" role="tablist">
+          <button id="tab-new" class="tab on" type="button">New player</button>
+          <button id="tab-return" class="tab" type="button">Returning player</button>
+        </div>
+        <h2 id="login-title">Create your Guardian</h2>
+        <p id="login-blurb">Pick a classroom nickname (not your full real name) and a short password so you can come back later.</p>
+        <div id="saved-players"></div>
+        <label for="player-name" class="kicker">Nickname</label>
+        <input id="player-name" type="text" maxlength="16" autocomplete="off" placeholder="e.g. StarFox 12">
+        <label for="player-pin" class="kicker">Password <span class="hint">(4–6 letters or numbers)</span></label>
+        <input id="player-pin" type="password" maxlength="6" autocomplete="off" inputmode="text" placeholder="e.g. blue7">
+        <div id="pin-confirm-wrap">
+          <label for="player-pin2" class="kicker">Type it again</label>
+          <input id="player-pin2" type="password" maxlength="6" autocomplete="off" inputmode="text" placeholder="Same password">
+        </div>
+        <label class="check-row"><input id="show-pins" type="checkbox"> Show passwords</label>
+        <div id="name-error" class="err"></div>
+        <div class="btn-row">
+          <button id="btn-name-go" class="btn mega" type="button">Let’s Go!</button>
+          <button id="btn-import" class="btn ghost" type="button">Backup code</button>
+          <button id="btn-name-back" class="btn ghost" type="button">Back</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="stage-wrap" class="hidden">
+      <canvas id="game" width="960" height="540">Your browser needs canvas to play Badge Quest.</canvas>
+      <div id="world-banner"></div>
+      <div id="toast"></div>
+      <div id="touch-ui">
+        <div id="dpad" aria-label="Move">
+          <button id="pad-up" type="button">▲</button>
+          <button id="pad-left" type="button">◀</button>
+          <button id="pad-right" type="button">▶</button>
+          <button id="pad-down" type="button">▼</button>
+        </div>
+        <div id="move-hint">Arrows / WASD · tap map · D-pad</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-howto" class="modal hidden" role="dialog" aria-labelledby="howto-title">
+    <div class="modal-card">
+      <p class="kicker">Quick start</p>
+      <h2 id="howto-title">How to Play</h2>
+      <ol class="howto">
+        <li>Move with <strong>arrow keys</strong>, <strong>WASD</strong>, the on-screen D-pad, or by tapping the map.</li>
+        <li>Walk into a <strong>glowing shrine</strong> to answer a safety question. Wrong answers explain why — you can try again.</li>
+        <li>Each world gives you <strong>3 shields</strong>. A wrong tap costs one. If you use all 3, that world restarts (other worlds stay saved).</li>
+        <li>Earn <strong>7 badges</strong> in a world to open the <strong>exit portal</strong>.</li>
+        <li>Worlds unlock in order. Finish all 7 for a printable <strong>Net Guardian certificate</strong>.</li>
+        <li>Progress <strong>auto-saves</strong> under your nickname + password. A short <strong>backup code</strong> can move progress to another computer.</li>
+        <li>On a question, tap <strong>Listen</strong> to hear it read aloud. Optional auto-read lives on that same card.</li>
+        <li>Press <strong>Esc</strong> to pause. The music button (or <strong>M</strong>) mutes adventure music — Listen still works unless you stop it.</li>
+      </ol>
+      <div class="q-actions"><button id="btn-howto-close" class="btn" type="button">Got it</button></div>
+    </div>
+  </div>
+
+  <div id="modal-pause" class="modal hidden" role="dialog">
+    <div class="modal-card">
+      <h2>Paused</h2>
+      <p>Your badges are saved. Take a breath, Guardian.</p>
+      <label class="kicker" for="vol-music">Music volume</label>
+      <input id="vol-music" type="range" min="0" max="100" value="70">
+      <div class="btn-row">
+        <button id="btn-resume" class="btn mega" type="button">Resume</button>
+        <button id="btn-pause-hub" class="btn ghost" type="button">World Hub</button>
+        <button id="btn-pause-save" class="btn ghost" type="button">Password / backup</button>
+        <button id="btn-mute-pause" class="btn ghost" type="button">🎵</button>
+        <button id="btn-pause-hero" class="btn ghost" type="button">Change character</button>
+        <button id="btn-pause-grade" class="btn ghost" type="button">Change grade</button>
+        <button id="btn-pause-howto" class="btn ghost" type="button">How to Play</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-save" class="modal hidden" role="dialog">
+    <div class="modal-card">
+      <h2>Password &amp; backup</h2>
+      <p>This computer already remembers you when you type your nickname and password. The backup code is only if you switch computers.</p>
+      <label class="kicker">Your backup code</label>
+      <div class="code-big" id="save-code-out">----- -----</div>
+      <div class="q-actions" style="margin-bottom:12px">
+        <button id="btn-copy-code" class="btn" type="button">Copy backup code</button>
+      </div>
+      <label class="kicker" for="save-code-in">Load a backup code onto this player</label>
+      <input id="save-code-in" type="text" maxlength="12" autocomplete="off" placeholder="e.g. H4K7M-P9Q2W">
+      <p class="kicker">Change password</p>
+      <input id="pin-old" type="password" maxlength="6" autocomplete="off" placeholder="Current password">
+      <input id="pin-new" type="password" maxlength="6" autocomplete="off" placeholder="New password (4–6)">
+      <input id="pin-new2" type="password" maxlength="6" autocomplete="off" placeholder="New password again">
+      <div id="save-msg" class="err"></div>
+      <div class="q-actions">
+        <button id="btn-load-code" class="btn teal" type="button">Load backup code</button>
+        <button id="btn-change-pin" class="btn" type="button">Save new password</button>
+        <button id="btn-save-close" class="btn ghost" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-question" class="modal hidden" role="dialog">
+    <div class="modal-card">
+      <p id="q-kicker" class="kicker">Challenge</p>
+      <div class="q-listen-bar">
+        <button id="btn-listen" class="btn teal" type="button" aria-label="Listen to the question">🔊 Listen</button>
+        <button id="btn-listen-stop" class="btn ghost hidden" type="button">Stop</button>
+        <label class="check-row auto-read"><input id="q-autoread" type="checkbox"> Auto-read questions</label>
+      </div>
+      <h2 id="q-prompt">Question</h2>
+      <div id="q-choices"></div>
+      <div id="q-feedback" class="q-feedback hidden"></div>
+      <div class="q-actions">
+        <button id="btn-q-later" class="btn ghost" type="button">Come back later</button>
+        <button id="btn-q-try" class="btn hidden" type="button">Try again</button>
+        <button id="btn-q-next" class="btn hidden" type="button">Collect badge ★</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-badge" class="modal hidden" role="dialog">
+    <div class="modal-card">
+      <p id="badge-title" class="kicker">Badge earned</p>
+      <div id="badge-art" class="badge-hero">★</div>
+      <h2 id="badge-name">Share Smart</h2>
+      <p id="badge-sub">Privacy Meadows · 1 / 7</p>
+      <div class="q-actions" style="justify-content:center">
+        <button id="btn-badge-ok" class="btn mega" type="button">Awesome!</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-worldwin" class="modal hidden" role="dialog">
+    <div class="modal-card">
+      <p class="kicker">World cleared</p>
+      <h2 id="ww-title">World complete!</h2>
+      <div class="badge-hero" style="--c:#ffd166">🏅</div>
+      <h2 id="ww-medal">Medal</h2>
+      <p id="ww-blurb">The exit portal is glowing.</p>
+      <div class="q-actions" style="justify-content:center">
+        <button id="btn-worldwin-ok" class="btn mega" type="button">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-cert" class="modal hidden" role="dialog">
+    <div class="modal-card">
+      <div id="cert-paper">
+        <p class="kicker">Hall of Guardians</p>
+        <h2>Certificate of Internet Safety</h2>
+        <p>This certifies that</p>
+        <div id="cert-name">Guardian</div>
+        <p id="cert-blurb">is a <strong>Net Guardian</strong> who completed all 7 worlds and 49 safety challenges in Badge Quest.</p>
+        <div id="cert-medals"></div>
+        <p id="cert-date"></p>
+        <div class="sign-line">Teacher signature: ______________________ &nbsp; J. Schwartz</div>
+      </div>
+      <div class="q-actions" style="justify-content:center;margin-top:12px">
+        <button id="btn-cert-print" class="btn" type="button">Print certificate</button>
+        <button id="btn-cert-hub" class="btn ghost" type="button">Back to hub</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-hero" class="modal hidden" role="dialog">
+    <div class="modal-card hero-card">
+      <p class="kicker">Pick your Guardian</p>
+      <h2>Who’s going on the quest?</h2>
+      <p>Tap a silly hero. You can change later in Pause.</p>
+      <div id="hero-grid" class="hero-grid"></div>
+      <div class="q-actions">
+        <button id="btn-hero-cancel" class="btn ghost hidden" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-redo" class="modal hidden" role="dialog">
+    <div class="modal-card">
+      <p class="kicker">Practice round</p>
+      <h2 id="redo-title">Let’s try this world again</h2>
+      <p id="redo-blurb">Three mix-ups is a lot for one map! That’s okay — this world’s badges reset so you can practice. Your other worlds are still safe.</p>
+      <div class="q-actions" style="justify-content:center">
+        <button id="btn-redo-ok" class="btn mega" type="button">Try this world again</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/questions.js?v=maze"></script>
+  <script src="js/maps.js?v=maze"></script>
+  <script src="js/heroes.js?v=maze"></script>
+  <script src="js/save.js?v=maze"></script>
+  <script src="js/audio.js?v=maze"></script>
+  <script src="js/speech.js?v=maze"></script>
+  <script src="js/game.js?v=maze"></script>
+  <script src="js/ui.js?v=maze"></script>
+</body>
+</html>
