@@ -371,10 +371,27 @@ NG.UI = {
 
   beginGame: function (save) {
     this.save = save;
+    NG.Save.ensureExtras(save);
     NG.Save.persist(save);
     this.show("screen-play");
-    NG.Game.enterHub(save);
+    this.resumeGame(save);
     this.refreshHud();
+  },
+
+  resumeGame: function (save) {
+    NG.Save.ensureExtras(save);
+    var r = save && save.resume;
+    if (r && r.mode === "world" && typeof r.worldId === "number" && r.worldId >= 0 && r.worldId <= 6) {
+      NG.Game.enterWorld(r.worldId);
+      if (typeof r.x === "number" && typeof r.y === "number") {
+        NG.Game.placePlayerPixels(r.x, r.y);
+      }
+      return;
+    }
+    NG.Game.enterHub(save);
+    if (r && (r.mode === "hub" || !r.mode) && typeof r.x === "number" && typeof r.y === "number") {
+      NG.Game.placePlayerPixels(r.x, r.y);
+    }
   },
 
   enterWorld: function (id) {
@@ -385,6 +402,7 @@ NG.UI = {
 
   returnHub: function (msg) {
     NG.Game.enterHub(this.save);
+    if (this.save) NG.Save.captureResume(this.save, NG.Game);
     this.refreshHud();
     if (msg) NG.Game.showToast(msg);
   },
@@ -469,9 +487,14 @@ NG.UI = {
   openSaveModal: function () {
     this.$("modal-pause").classList.add("hidden");
     this.$("modal-save").classList.remove("hidden");
+    if (this.save && NG.Game) {
+      NG.Save.captureResume(this.save, NG.Game);
+      this.$("save-msg").textContent = "Progress saved on this computer. Log in with the same nickname + password to continue where you left off.";
+    } else {
+      this.$("save-msg").textContent = "";
+    }
     if (this.save) this.$("save-code-out").textContent = NG.Save.prettyBackup(this.save);
     else this.$("save-code-out").textContent = "Log in first to see your code.";
-    this.$("save-msg").textContent = "";
     this.$("pin-old").value = "";
     this.$("pin-new").value = "";
     this.$("pin-new2").value = "";

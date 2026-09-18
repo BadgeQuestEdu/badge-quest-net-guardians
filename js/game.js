@@ -177,6 +177,18 @@ NG.Game = {
     this.target = null;
   },
 
+  placePlayerPixels: function (x, y) {
+    if (!this.map) return;
+    var min = NG.TILE * 0.5;
+    var maxX = this.map.w * NG.TILE - NG.TILE * 0.5;
+    var maxY = this.map.h * NG.TILE - NG.TILE * 0.5;
+    this.player.x = NG.clamp(x, min, maxX);
+    this.player.y = NG.clamp(y, min, maxY);
+    this.player.vx = 0;
+    this.player.vy = 0;
+    this.target = null;
+  },
+
   showBanner: function (title, sub) {
     this.banner = title;
     this.bannerSub = sub;

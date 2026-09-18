@@ -23,6 +23,7 @@ NG.Save = {
       wrongs: [0, 0, 0, 0, 0, 0, 0],
       hero: "",
       grade: 0,
+      resume: null,
       ts: Date.now()
     };
   },
@@ -177,7 +178,53 @@ NG.Save = {
     if (!save.wrongs || save.wrongs.length !== 7) save.wrongs = [0, 0, 0, 0, 0, 0, 0];
     if (typeof save.hero !== "string") save.hero = save.hero || "";
     save.grade = NG.normalizeGrade ? NG.normalizeGrade(save.grade) : (save.grade === 3 || save.grade === 4 || save.grade === 5 ? save.grade : 0);
+    if (save.resume != null && typeof save.resume === "object") {
+      var r = save.resume;
+      var mode = r.mode === "world" ? "world" : "hub";
+      var wid = typeof r.worldId === "number" ? r.worldId : 0;
+      if (mode === "world" && (wid < 0 || wid > 6)) {
+        mode = "hub";
+        wid = 0;
+      }
+      save.resume = {
+        mode: mode,
+        worldId: mode === "world" ? wid : (typeof r.worldId === "number" ? r.worldId : 0),
+        x: typeof r.x === "number" ? r.x : 0,
+        y: typeof r.y === "number" ? r.y : 0
+      };
+    } else {
+      save.resume = null;
+    }
     return save;
+  },
+
+  writeResumeFromGame: function (save, game) {
+    if (!save || !game || !game.player) return;
+    var mode = game.mode === "world" ? "world" : "hub";
+    var worldId = typeof game.worldId === "number" ? game.worldId : 0;
+    if (mode === "world" && (worldId < 0 || worldId > 6)) {
+      mode = "hub";
+      worldId = 0;
+    }
+    save.resume = {
+      mode: mode,
+      worldId: mode === "world" ? worldId : (typeof game.worldId === "number" ? game.worldId : 0),
+      x: game.player.x,
+      y: game.player.y
+    };
+  },
+
+  captureResume: function (save, game) {
+    if (!save) return;
+    this.ensureExtras(save);
+    if (game && game.player) this.writeResumeFromGame(save, game);
+    this.persist(save);
+  },
+
+  clearResume: function (save) {
+    if (!save) return;
+    save.resume = null;
+    this.persist(save);
   },
 
   setGrade: function (save, grade) {
@@ -196,6 +243,9 @@ NG.Save = {
   recordWrong: function (save, world) {
     this.ensureExtras(save);
     save.wrongs[world] = (save.wrongs[world] || 0) + 1;
+    if (typeof NG !== "undefined" && NG.Game && NG.Game.player) {
+      this.writeResumeFromGame(save, NG.Game);
+    }
     this.persist(save);
     return save.wrongs[world];
   },
@@ -219,6 +269,9 @@ NG.Save = {
     save.badges[world][index] = 1;
     this.syncUnlock(save);
     if (save.complete[world]) save.wrongs[world] = 0;
+    if (typeof NG !== "undefined" && NG.Game && NG.Game.player) {
+      this.writeResumeFromGame(save, NG.Game);
+    }
     this.persist(save);
     return save.complete[world] === 1;
   },
